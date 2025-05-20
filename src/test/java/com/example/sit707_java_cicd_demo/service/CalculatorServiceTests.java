@@ -22,7 +22,7 @@ public class CalculatorServiceTests {
     @Test
     public void testAddFailure() {
         // This test is designed to fail intentionally
-        assertEquals(5, calculatorService.add(2, 2)); // Should be 4, not 5
+        assertEquals(4, calculatorService.add(2, 2)); // Should be 4, not 5
     }
 
     @Test
