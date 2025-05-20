@@ -1,0 +1,56 @@
+steps:
+  # Step 1: Run unit tests
+  - name: 'maven:3.8.5-openjdk-11-slim'
+    id: 'run-tests'
+    entrypoint: mvn
+    args: ['test']
+
+  # Step 2: Configure Docker authentication for Artifact Registry
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'docker-auth'
+    args:
+      - 'auth'
+      - 'configure-docker'
+      - 'us-central1-docker.pkg.dev'
+      - '--quiet'
+
+  # Step 3: Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/project-sit707/java-apps/spring-app:latest', '.']
+
+  # Step 4: Push the container image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-image'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Attempting to push image to Artifact Registry..."
+        docker image ls
+        docker push us-central1-docker.pkg.dev/project-sit707/java-apps/spring-app:latest || {
+          echo "Push failed with exit code $?"
+          exit 1
+        }
+
+  # Step 5: Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-to-cloud-run'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'spring-app'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/project-sit707/java-apps/spring-app:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'us-central1-docker.pkg.dev/project-sit707/java-apps/spring-app:latest'
+
+options:
+  logging: 'CLOUD_LOGGING_ONLY'
