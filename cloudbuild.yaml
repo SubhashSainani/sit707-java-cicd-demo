@@ -1,6 +1,6 @@
 steps:
   # Step 1: Run unit tests
-  - name: 'maven:3.8.5-openjdk-11-slim'
+  - name: 'maven:3.8.5-eclipse-temurin-17'
     id: 'run-tests'
     entrypoint: mvn
     args: ['test']
